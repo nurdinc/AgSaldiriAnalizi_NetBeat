@@ -9,7 +9,7 @@ LABEL_COL = "Label"
 
 def load_csv(path: str | Path) -> pd.DataFrame:
     """Tek bir CSV dosyasını okur, sütun adlarındaki baştaki/sondaki boşlukları siler."""
-    df = pd.read_csv(path, low_memory=False)
+    df = pd.read_csv(path, low_memory=False, encoding="latin-1")
     df.columns = df.columns.str.strip()
     return df
 
@@ -30,3 +30,14 @@ def split_features(df: pd.DataFrame):
     X = df.drop(columns=[LABEL_COL]).select_dtypes(include=np.number)
     y = binary_labels(df)
     return X, y
+
+
+
+def load_all(folder: str | Path) -> pd.DataFrame:
+    """Klasördeki (alt klasörler dahil) tüm CSV dosyalarını tek tabloda birleştirir ve temizler."""
+    files = sorted(Path(folder).rglob("*.csv"))
+    if not files:
+        raise FileNotFoundError(f"{folder} içinde CSV dosyası bulunamadı")
+    frames = [load_csv(f) for f in files]
+    df = pd.concat(frames, ignore_index=True)
+    return clean(df)
